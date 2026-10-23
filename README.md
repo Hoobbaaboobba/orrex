@@ -61,6 +61,18 @@ How `context.Context` travels from `main` to the database: where it is created, 
 
 <img src="docs/context.png" alt="Context propagation graph" width="100%">
 
+### Handlers — see what the client gets
+Next to an HTTP handler's flowchart there is a response preview for every path: status, headers and body.
+JSON is built from the literal or from the type, honouring json tags and `omitempty`; your own helpers like
+`writeJSON(w, status, v)` are inlined at the call site. Warns when a header is set after the body is written,
+`WriteHeader` is called twice, or JSON goes out without `Content-Type`. Works with `net/http`, gin and echo.
+
+### Calls — without leaving the flowchart
+Click a call to a project function to open a side panel: what it reads from and writes to its arguments, its exits,
+defers and goroutines, what it does with errors — and which branches run with the values known at the call site.
+Hovering highlights the lines that prepare the arguments and read the result. Expand the callee right inside the call
+node or open its flowchart (with breadcrumbs back). For stdlib calls — the signature and a pkg.go.dev link.
+
 ### Deadlocks and goroutine leaks — before you run anything
 - a goroutine sends to an unbuffered channel while the function may return on a timeout or `ctx.Done()` — the goroutine hangs forever;
 - a channel no other goroutine can see, a `nil` channel, `close` in a loop, double `close`, send after `close`;
