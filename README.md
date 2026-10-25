@@ -50,8 +50,11 @@ swallowed, logged or turned into an HTTP response. Everything else is dimmed.
 <img src="docs/errors.png" alt="Error flow mode in a handler: 400, 404, 500" width="100%">
 
 ### Concurrency
-Goroutines, channels and mutexes of the whole project as one graph: who sends, who receives, who closes,
-who locks what. After a recorded trace, mutex nodes show real contention.
+Goroutines, channels and mutexes of the whole project as one graph, unrelated parts in separate groups.
+Nodes carry short verdicts: when a goroutine ends and whether it can leak, a channel's capacity and who sends,
+receives and closes, which fields a mutex guards and where they are touched without it. A node with a finding is
+marked orange; click it for the explanation with links to the lines. "Only with problems" filters large projects.
+After a recorded trace, mutex nodes show real contention.
 
 <img src="docs/concurrency.png" alt="Concurrency graph: goroutines, channels, mutexes" width="100%">
 
@@ -77,7 +80,8 @@ node or open its flowchart (with breadcrumbs back). For stdlib calls — the sig
 - a goroutine sends to an unbuffered channel while the function may return on a timeout or `ctx.Done()` — the goroutine hangs forever;
 - a channel no other goroutine can see, a `nil` channel, `close` in a loop, double `close`, send after `close`;
 - `wg.Wait()` with no `wg.Done()`;
-- a function holds a mutex and calls another one that locks the same mutex; two mutexes locked in opposite orders in different places.
+- a function holds a mutex and calls another one that locks the same mutex; two mutexes locked in opposite orders in different places;
+- a field that is read and written under a mutex everywhere is touched without it somewhere (data race); `return` between `Lock` and `Unlock`; network, database or channel operations while holding a mutex.
 
 Record a trace, and a run that hung or panicked goes to the top of the overview — with the line where `main` is stuck.
 
@@ -177,7 +181,7 @@ Early, but already useful on real projects — tested on [caddy](https://github.
 3.5k functions analysed in under 2 seconds.
 
 - Go only for now. Builds for macOS (Apple Silicon, Intel), Linux (x86_64, arm64) and Windows x64.
-- Hints are heuristics — 34 rules. They can be noisy on code written in a different style;
+- Hints are heuristics — 37 rules. They can be noisy on code written in a different style;
   turn rules off with `--disable`.
 - The source code is not published yet.
 
